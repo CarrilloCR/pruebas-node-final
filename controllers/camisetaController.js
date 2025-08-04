@@ -1,18 +1,20 @@
 const Camiseta = require('../models/Camiseta');
+const Usuario = require('../models/Usuario'); 
 
-
+// Devuelve todas las camisetas con los datos del usuario creador (nombre y email)
 exports.getCamisetas = async (req, res) => {
   try {
-    const camisetas = await Camiseta.find();
+    const camisetas = await Camiseta.find().populate('creador', 'nombre email');
     res.json(camisetas);
   } catch (error) {
     res.status(500).json({ error: 'Error del servidor' });
   }
 };
 
+// Devuelve una camiseta por ID con los datos del usuario creador (nombre y email)
 exports.getCamisetaById = async (req, res) => {
   try {
-    const camiseta = await Camiseta.findById(req.params.id);
+    const camiseta = await Camiseta.findById(req.params.id).populate('creador', 'nombre email');
     if (!camiseta) return res.status(404).json({ error: 'Camiseta no encontrada' });
     res.json(camiseta);
   } catch (error) {
@@ -22,26 +24,27 @@ exports.getCamisetaById = async (req, res) => {
 
 exports.createCamiseta = async (req, res) => {
   try {
-   const nuevaCamiseta = new Camiseta(req.body);
-   CamisetaGuardada=await nuevaCamiseta.save();
+    const nuevaCamiseta = new Camiseta(req.body);
+    nuevaCamiseta.creador = req.usuarioId; 
+    const CamisetaGuardada = await nuevaCamiseta.save();
     res.status(201).json(CamisetaGuardada);
   } catch (error) {
     console.error(error);
-    res.status(400).json({ error: 'Error al crear camiseta' });
+    res.status(400).json({ error: error.message || 'Error al crear camiseta' });
   }
 };
 
 exports.updateCamiseta = async (req, res) => {
   try {
-    const camisetaActualizada = await  Camiseta.findByIdAndUpdate(
+    const camisetaActualizada = await Camiseta.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true }
     );
-    if (!camisetaActualizadaActualizado) return res.status(404).json({ error: 'Camiseta no encontrada' });
+    if (!camisetaActualizada) return res.status(404).json({ error: 'Camiseta no encontrada' });
     res.json(camisetaActualizada);
   } catch (error) {
-    res.status(400).json({ error: 'Error al actualizar camiseta' });
+    res.status(400).json({ error: error.message || 'Error al actualizar camiseta' });
   }
 };
 

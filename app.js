@@ -17,7 +17,7 @@ app.use('/api/usuarios', require('./routes/usuarios'));
 
 app.use('/api/camisetas', require('./routes/camisetas'));
 
-app.get('/camiseta', verificarToken, (req, res) => {
+app.get('/camiseta', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'camiseta.html'));
 });
 
