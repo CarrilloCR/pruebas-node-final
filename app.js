@@ -11,12 +11,14 @@ connectDB();
 // Middleware para leer JSON
 app.use(express.json());
 
-// Rutas
-app.use('/api/usuarios', require('./routes/usuarios'));
-//app.use(express.static(path.join(__dirname, 'public')));
+// IMPORTANTE: Servir archivos estáticos
+app.use(express.static(path.join(__dirname, 'public')));
 
+// Rutas API
+app.use('/api/usuarios', require('./routes/usuarios'));
 app.use('/api/camisetas', require('./routes/camisetas'));
 
+// Rutas para servir HTML
 app.get('/camiseta', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'camiseta.html'));
 });
@@ -29,7 +31,11 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Iniciar servidor// Iniciar servidor
+app.get('/carrusel', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'carrusel.html'));
+});
+
+// Iniciar servidor
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Servidor API escuchando en http://localhost:${PORT}`);
