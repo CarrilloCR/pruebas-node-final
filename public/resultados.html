@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Diseña tu Camiseta</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center">
+
+
+  <hr class="w-full max-w-4xl mb-6">
+  <div class="w-full max-w-4xl mx-auto">
+    <table id="tabla-camisetas" class="display w-full text-sm text-left rounded overflow-hidden shadow bg-white">
+      <thead class="bg-blue-100">
+        <tr>
+          <th class="px-3 py-2">Miniatura</th>
+          <th class="px-3 py-2">Fecha creación</th>
+          <th class="px-3 py-2">Creador</th>
+           <th class="px-3 py-2">Creador</th>
+          <th class="px-3 py-2">Acciones</th>
+         
+        </tr>
+      </thead>
+      <tbody>
+        <!-- El cuerpo se llenará dinámicamente -->
+      </tbody>
+    </table>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+  <script>
+   
+  
+    // Genera una miniatura SVG para la camiseta
+    function generarMiniatura(c) {
+      return `
+        <svg width="60" height="40" viewBox="1 2 26 14">
+          <image href="https://cdn-icons-png.flaticon.com/512/892/892458.png" x="0" y="0" width="60" height="40"/>
+          <path d="M 4 8 M 5 3 L 5 6 L 3 7 L 1 5" fill="${c.mangaIzqColor}" />
+          <path d="M 9 5 L 7 3 L 5 3 L 5 6 L 5 12 L 13 12 L 13 6 L 13 3 L 11 3" fill="${c.torsoColor}" />
+          <path d="M 13 6 L 13 3 L 17 5 L 15 7" fill="${c.mangaDerColor}" />
+          <path d="M 8 2 L 7 3 L 9 5 L 8 3" fill="${c.cuelloIzqColor}" />
+          <path d="M 10 2 L 11 3 L 9 5 L 10 3 M 1 4" fill="${c.cuelloDerColor}" />
+        </svg>
+      `;
+    }
+
+    // Inicializar DataTable
+    const tabla = $('#tabla-camisetas').DataTable();
+
+    // Cargar camisetas desde el backend y poblar la tabla
+    async function cargarCamisetas() {
+      tabla.clear();
+      const resp = await fetch('/api/camisetas', {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+      });
+      const camisetas = await resp.json();
+      camisetas.forEach(c => {
+        let nombreCreador = 'Desconocido';
+        if (c.creador && typeof c.creador === 'object') {
+          nombreCreador = c.creador.nombre || c.creador.email || 'Usuario';
+        } else if (typeof c.creador === 'string') {
+          nombreCreador = c.creador;
+        }
+        tabla.row.add([
+          generarMiniatura(c),
+          new Date(c.fechaCreacion).toLocaleString(),
+          nombreCreador,
+          `<button onclick='editarCamiseta("${c._id}")' class="px-2 py-1 rounded bg-yellow-500 text-white font-semibold hover:bg-yellow-600 transition mr-2">Modificar</button>
+           <button onclick='eliminarCamiseta("${c._id}")' class="px-2 py-1 rounded bg-red-600 text-white font-semibold hover:bg-red-700 transition">Eliminar</button>`
+        ]);
+      });
+      tabla.draw();
+    }
+
+    // Función para editar camiseta
+    window.editarCamiseta = async function(id) {
+      // Obtener datos actuales de la camiseta
+      const resp = await fetch('/api/camisetas/' + id, {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+      });
+      const camiseta = await resp.json();
+
+      // Crear un formulario simple para editar colores
+      const formHtml = `
+        <div id="modal-editar" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div class="modal-content bg-white p-6 rounded-xl shadow-lg min-w-[250px]">
+            <h3 class="text-xl font-bold mb-4">Editar Camiseta</h3>
+            <div class="space-y-2 mb-4">
+              <label class="block">Manga Izquierda: <input type="color" id="edit-mangaIzq" value="${camiseta.mangaIzqColor}" class="ml-2 w-12 h-8 rounded border shadow" /></label>
+              <label class="block">Torso: <input type="color" id="edit-torso" value="${camiseta.torsoColor}" class="ml-2 w-12 h-8 rounded border shadow" /></label>
+              <label class="block">Manga Derecha: <input type="color" id="edit-mangaDer" value="${camiseta.mangaDerColor}" class="ml-2 w-12 h-8 rounded border shadow" /></label>
+              <label class="block">Cuello Izquierdo: <input type="color" id="edit-cuelloIzq" value="${camiseta.cuelloIzqColor}" class="ml-2 w-12 h-8 rounded border shadow" /></label>
+              <label class="block">Cuello Derecho: <input type="color" id="edit-cuelloDer" value="${camiseta.cuelloDerColor}" class="ml-2 w-12 h-8 rounded border shadow" /></label>
+            </div>
+            <div class="flex gap-4">
+              <button id="btn-guardar-edicion" class="px-4 py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700 transition">Guardar Cambios</button>
+              <button id="btn-cerrar-edicion" class="px-4 py-2 rounded bg-gray-400 text-white font-semibold hover:bg-gray-500 transition">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', formHtml);
+
+      document.getElementById('btn-cerrar-edicion').onclick = function() {
+        document.getElementById('modal-editar').remove();
+      };
+
+      document.getElementById('btn-guardar-edicion').onclick = async function() {
+        const editData = {
+          mangaIzqColor: document.getElementById('edit-mangaIzq').value,
+          torsoColor: document.getElementById('edit-torso').value,
+          mangaDerColor: document.getElementById('edit-mangaDer').value,
+          cuelloIzqColor: document.getElementById('edit-cuelloIzq').value,
+          cuelloDerColor: document.getElementById('edit-cuelloDer').value
+        };
+        await fetch('/api/camisetas/' + id, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          },
+          body: JSON.stringify(editData)
+        });
+        document.getElementById('modal-editar').remove();
+        cargarCamisetas();
+      };
+    };
+
+    // Función para eliminar camiseta
+    window.eliminarCamiseta = async function(id) {
+      if (confirm('¿Seguro que quieres eliminar esta camiseta?')) {
+        await fetch('/api/camisetas/' + id, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+        });
+        cargarCamisetas();
+      }
+    };
+
+    // Cargar camisetas al iniciar
+    cargarCamisetas();
+  </script>
+</body>
+</html>

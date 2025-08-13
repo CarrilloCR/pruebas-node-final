@@ -34,6 +34,12 @@ app.get('/login', (req, res) => {
 app.get('/carrusel', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'carrusel.html'));
 });
+app.get('/index', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+}); 
+app.get('/resultado', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'resultados.html'));
+});
 
 // Iniciar servidor
 const PORT = process.env.PORT || 4000;

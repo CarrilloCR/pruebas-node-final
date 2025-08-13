@@ -3,7 +3,8 @@ const router = express.Router();
 const camisetaController = require('../controllers/camisetaController');
 const { verificarToken } = require('../seguridad/auth');
 
-router.get('/', camisetaController.getCamisetas); // Sin autenticación para ver todas
+router.get('/', camisetaController.getCamisetas);
+router.get('/ordernadoxcalificacion', camisetaController.getCamisetaOrderById); // Sin autenticación para ver todas
 router.get('/:id', verificarToken, camisetaController.getCamisetaById);
 router.post('/', verificarToken, camisetaController.createCamiseta);
 router.put('/:id', verificarToken, camisetaController.updateCamiseta);

@@ -11,6 +11,18 @@ exports.getCamisetas = async (req, res) => {
   }
 };
 
+exports.getCamisetaOrderById = async (req, res) => {
+  try {
+    const camisetas = await Camiseta.find().sort({ _id: -1 }).populate('creador', 'nombre email');
+    res.json(camisetas);
+  }
+  catch (error) {
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+};
+
+
+
 // Devuelve una camiseta por ID con los datos del usuario creador (nombre y email)
 exports.getCamisetaById = async (req, res) => {
   try {
